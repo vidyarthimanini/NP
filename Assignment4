@@ -1,0 +1,57 @@
+Server Code:
+#include <stdio.h>
+#include <netdb.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+int main(){
+char str[100];
+int sockfd,listenfd;
+struct sockaddr_in servaddr; listenfd=socket(AF_INET,SOCK_STREAM,0); bzero(&servaddr,sizeof(servaddr)); servaddr.sin_family=AF_INET; servaddr.sin_addr.s_addr=htonl(INADDR_ANY); servaddr.sin_port=htons(22000);
+bind(listenfd,(struct sockaddr *)&servaddr,sizeof(servaddr)); listen(listenfd,10);
+sockfd=accept(listenfd,(struct sockaddr *)NULL,NULL); bzero(str,100);
+while(1){
+recv(sockfd,str,100,0);
+printf("Client: %s",str);
+fgets(str,100,stdin);
+if(strcmp("exit\n",str)==0){
+break;
+}
+else{
+send(sockfd,str,strlen(str),0);
+}
+}
+close(sockfd);
+}
+
+Client Code:
+#include <stdio.h>
+#include <netdb.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+int main(){
+char sendstr[100],recvstr[100];
+int sockfd;
+struct sockaddr_in servaddr; bzero(&servaddr,sizeof(servaddr)); sockfd=socket(AF_INET,SOCK_STREAM,0); servaddr.sin_family=AF_INET; servaddr.sin_port=htons(22000);
+servaddr.sin_addr.s_addr=inet_addr("127.0.0.1"); connect(sockfd,(struct sockaddr *)&servaddr,sizeof(servaddr)); bzero(sendstr,100);
+bzero(recvstr,100);
+while(1){
+fgets(sendstr,100,stdin);
+if(strcmp("exit\n",sendstr)==0){
+break;
+}
+else{
+send(sockfd,sendstr,100,0);
+recv(sockfd,recvstr,100,0);
+printf("Server: %s",recvstr);
+}
+}
+close(sockfd);
+}
